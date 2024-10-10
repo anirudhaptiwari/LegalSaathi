@@ -1,4 +1,3 @@
-# mainapp.py
 import streamlit as st
 from streamlit_option_menu import option_menu
 import time
@@ -116,7 +115,7 @@ def local_css():
     """, unsafe_allow_html=True)
 
 def navigate_to_service(service_name):
-    st.session_state.page = service_name.lower()
+    st.experimental_set_query_params(page=service_name.lower())
 
 def show_home():
     st.markdown("""
@@ -202,6 +201,7 @@ def show_services():
             
             if st.button(f"Try {service['title']} Now", key=f"try_{service['title'].lower()}"):
                 navigate_to_service(service['title'])
+
 
 def show_about():
     st.markdown("""
@@ -294,7 +294,10 @@ def show_contact():
 def main():
     local_css()
     
-    if 'page' not in st.session_state:
+    query_params = st.experimental_get_query_params()
+    if 'page' in query_params:
+        st.session_state.page = query_params['page'][0]
+    elif 'page' not in st.session_state:
         st.session_state.page = 'home'
     
     selected = option_menu(
@@ -340,38 +343,8 @@ def main():
         elif st.session_state.page == 'contact':
             show_contact()
         elif st.session_state.page in ['simplification', 'compliance', 'drafting']:
-            st.write(f"You are now viewing the {st.session_state.page.capitalize()} service page.")
-            
-            if st.session_state.page == 'simplification':
-                st.write("Welcome to our AI-powered legal document simplification service.")
-                uploaded_file = st.file_uploader("Upload your legal document", type=["txt", "pdf", "docx"])
-                if uploaded_file is not None:
-                    st.write("Document uploaded successfully!")
-                    st.write("Processing your document... (This is a placeholder for the actual simplification process)")
-                st.text_area("Simplified Text", "Your simplified legal text will appear here.", height=300)
-            
-            elif st.session_state.page == 'compliance':
-                st.write("Ensure your legal documents meet all regulatory requirements.")
-                uploaded_file = st.file_uploader("Upload your legal document", type=["txt", "pdf", "docx"])
-                if uploaded_file is not None:
-                    st.write("Document uploaded successfully!")
-                    st.write("Checking compliance... (This is a placeholder for the actual compliance checking process)")
-                st.text_area("Compliance Report", "Your compliance report will appear here.", height=300)
-            
-            elif st.session_state.page == 'drafting':
-                st.write("Generate customized legal documents tailored to your specific needs.")
-                document_type = st.selectbox("Select document type", ["Contract", "NDA", "Terms of Service", "Privacy Policy"])
-                st.text_input("Party A Name")
-                st.text_input("Party B Name")
-                st.date_input("Agreement Date")
-                if st.button("Generate Document"):
-                    st.write("Generating your document... (This is a placeholder for the actual document generation process)")
-                st.text_area("Generated Document", "Your generated legal document will appear here.", height=300)
-            
-            # Add a back button to return to the main page
-            if st.button("Back to Main Page"):
-                st.session_state.page = 'home'
-                st.experimental_rerun()
+            st.write(f"Redirecting to {st.session_state.page.capitalize()} service...")
+            st.markdown(f'<meta http-equiv="refresh" content="0;url=/{st.session_state.page}/app">', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
