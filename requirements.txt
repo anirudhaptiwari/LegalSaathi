@@ -1,0 +1,13 @@
+streamlit==1.39.0
+streamlit-option-menu
+Pillow
+PyMuPDF
+PyPDF2
+python-docx
+pytesseract
+fpdf
+groq
+psycopg2-binary
+requests
+mammoth
+python-dotenv
