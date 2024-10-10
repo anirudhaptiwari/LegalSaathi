@@ -10,18 +10,6 @@ from docx2pdf import convert
 import io
 import tempfile
 
-# Ensure the docs directory exists
-docs_dir = os.path.join(os.getcwd(), 'docs')
-os.makedirs(docs_dir, exist_ok=True)
-
-# Load contract types from JSON file
-with open('contract_types.json', 'r') as f:
-    contract_types = json.load(f)
-
-# Load placeholder questions from JSON file
-with open('placeholder_questions.json', 'r') as f:
-    placeholder_questions = json.load(f)
-
 # Function to replace text in paragraphs and runs
 def replace_text_in_paragraph(paragraph, old_text, new_text):
     if old_text in paragraph.text:
@@ -92,83 +80,99 @@ preview_css = """
 </style>
 """
 
-# Sidebar: Contract Types
-st.sidebar.title("Corporate & Business Contracts")
-selected_contract = st.sidebar.selectbox("Select a Contract Type", options=list(contract_types.keys()))
+def main():
+    # Ensure the docs directory exists
+    docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
+    os.makedirs(docs_dir, exist_ok=True)
 
-# Main Content: Display Contract Form
-if selected_contract:
-    st.header(f"{selected_contract} Generator")
-    st.subheader("Please fill in the following details:")
+    # Load contract types from JSON file
+    with open(os.path.join(os.path.dirname(__file__), 'contract_types.json'), 'r') as f:
+        contract_types = json.load(f)
 
-    # Get the document template path
-    template_path = contract_types[selected_contract]
-    local_file_path = os.path.join(docs_dir, template_path)
+    # Load placeholder questions from JSON file
+    with open(os.path.join(os.path.dirname(__file__), 'placeholder_questions.json'), 'r') as f:
+        placeholder_questions = json.load(f)
 
-    # Create input fields for each placeholder
-    form_details = {}
-    for placeholder, question in placeholder_questions[selected_contract].items():
-        form_details[placeholder] = st.text_input(question)
+    # Sidebar: Contract Types
+    st.sidebar.title("Corporate & Business Contracts")
+    selected_contract = st.sidebar.selectbox("Select a Contract Type", options=list(contract_types.keys()))
 
-    # Button to generate preview and enable downloads
-    if st.button("Generate Contract"):
-        st.write("Generating contract...")
+    # Main Content: Display Contract Form
+    if selected_contract:
+        st.header(f"{selected_contract} Generator")
+        st.subheader("Please fill in the following details:")
 
-        # Generate the document
-        doc = generate_document(selected_contract, form_details, local_file_path)
+        # Get the document template path
+        template_path = contract_types[selected_contract]
+        local_file_path = os.path.join(docs_dir, template_path)
 
-        # Save the document to a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
-            doc.save(tmp_file.name)
-            tmp_file_path = tmp_file.name
+        # Create input fields for each placeholder
+        form_details = {}
+        for placeholder, question in placeholder_questions[selected_contract].items():
+            form_details[placeholder] = st.text_input(question)
 
-        # Convert the document to HTML for preview
-        with open(tmp_file_path, 'rb') as docx_file:
-            result = mammoth.convert_to_html(docx_file)
-            html_content = result.value
+        # Button to generate preview and enable downloads
+        if st.button("Generate Contract"):
+            st.write("Generating contract...")
 
-        # Wrap the HTML content with our custom CSS
-        styled_html = f"{preview_css}<div class='contract-preview'>{html_content}</div>"
+            # Generate the document
+            doc = generate_document(selected_contract, form_details, local_file_path)
 
-        # Display the preview
-        st.subheader("Contract Preview")
-        st.components.v1.html(styled_html, height=600, scrolling=True)
+            # Save the document to a temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
+                doc.save(tmp_file.name)
+                tmp_file_path = tmp_file.name
 
-        # Save as DOCX
-        output_docx_path = os.path.join(docs_dir, f'{selected_contract.lower().replace(" ", "_")}_output.docx')
-        doc.save(output_docx_path)
+            # Convert the document to HTML for preview
+            with open(tmp_file_path, 'rb') as docx_file:
+                result = mammoth.convert_to_html(docx_file)
+                html_content = result.value
 
-        # Convert to PDF
-        output_pdf_path = output_docx_path.replace('.docx', '.pdf')
-        convert(output_docx_path, output_pdf_path)
+            # Wrap the HTML content with our custom CSS
+            styled_html = f"{preview_css}<div class='contract-preview'>{html_content}</div>"
 
-        # Download buttons
-        st.subheader("Download Options")
-        
-        # DOCX download
-        with open(output_docx_path, 'rb') as f:
-            docx_bytes = f.read()
-        
-        st.download_button(
-            label="Download Contract (DOCX)",
-            data=docx_bytes,
-            file_name=f'{selected_contract.lower().replace(" ", "_")}.docx',
-            mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
+            # Display the preview
+            st.subheader("Contract Preview")
+            st.components.v1.html(styled_html, height=600, scrolling=True)
 
-        # PDF download
-        with open(output_pdf_path, 'rb') as f:
-            pdf_bytes = f.read()
-        
-        st.download_button(
-            label="Download Contract (PDF)",
-            data=pdf_bytes,
-            file_name=f'{selected_contract.lower().replace(" ", "_")}.pdf',
-            mime='application/pdf'
-        )
+            # Save as DOCX
+            output_docx_path = os.path.join(docs_dir, f'{selected_contract.lower().replace(" ", "_")}_output.docx')
+            doc.save(output_docx_path)
 
-        # Remove the temporary file
-        os.unlink(tmp_file_path)
+            # Convert to PDF
+            output_pdf_path = output_docx_path.replace('.docx', '.pdf')
+            convert(output_docx_path, output_pdf_path)
 
-    # Display legal compliance notice
-    st.info("This contract generator is designed to comply with Indian laws. However, it is recommended to have the final contract reviewed by a legal professional to ensure full compliance with current regulations and your specific business needs.")
+            # Download buttons
+            st.subheader("Download Options")
+            
+            # DOCX download
+            with open(output_docx_path, 'rb') as f:
+                docx_bytes = f.read()
+            
+            st.download_button(
+                label="Download Contract (DOCX)",
+                data=docx_bytes,
+                file_name=f'{selected_contract.lower().replace(" ", "_")}.docx',
+                mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+
+            # PDF download
+            with open(output_pdf_path, 'rb') as f:
+                pdf_bytes = f.read()
+            
+            st.download_button(
+                label="Download Contract (PDF)",
+                data=pdf_bytes,
+                file_name=f'{selected_contract.lower().replace(" ", "_")}.pdf',
+                mime='application/pdf'
+            )
+
+            # Remove the temporary file
+            os.unlink(tmp_file_path)
+
+        # Display legal compliance notice
+        st.info("This contract generator is designed to comply with Indian laws. However, it is recommended to have the final contract reviewed by a legal professional to ensure full compliance with current regulations and your specific business needs.")
+
+if __name__ == "__main__":
+    main()
