@@ -115,7 +115,7 @@ def local_css():
     """, unsafe_allow_html=True)
 
 def navigate_to_service(service_name):
-    st.query_params(page=service_name.lower())
+    st.experimental_set_query_params(page=service_name.lower())
 
 def show_home():
     st.markdown("""
@@ -294,9 +294,10 @@ def show_contact():
 def main():
     local_css()
     
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
+
     if 'page' in query_params:
-        st.session_state.page = query_params['page'][0]
+        st.session_state.page = query_params['page']
     elif 'page' not in st.session_state:
         st.session_state.page = 'home'
     
