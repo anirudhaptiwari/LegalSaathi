@@ -1,12 +1,14 @@
 import streamlit as st
-import llm_integration  # Assuming llm_integration.py is the file where LLMIntegration class is defined
-import document_processor  # Importing your document processor module
-from fpdf import FPDF  # Import the FPDF library
+import os
+import sys
 
-# Streamlit file uploader widget
-uploaded_file = st.file_uploader("Upload a contract file", type=['pdf', 'docx'])
+# Add the project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Function to generate PDF report
+from llm_integration import LLMIntegration
+import document_processor
+from fpdf import FPDF
+
 def generate_pdf(summary, balance_score, compliance_check, key_clauses, overall_assessment):
     pdf = FPDF()
     pdf.add_page()
@@ -71,92 +73,104 @@ def generate_pdf(summary, balance_score, compliance_check, key_clauses, overall_
 
     return pdf
 
-# Check if a file has been uploaded
-if uploaded_file is not None:
-    # Save the uploaded file temporarily
-    with open(uploaded_file.name, "wb") as f:
-        f.write(uploaded_file.getbuffer())
+def main():
+    st.title("Compliance Checker")
 
-    # Extract text from the uploaded document
-    try:
-        document_text = document_processor.process_document(uploaded_file.name)
-    except Exception as e:
-        st.error(f"Failed to process document: {e}")
-        document_text = None
+    # Streamlit file uploader widget
+    uploaded_file = st.file_uploader("Upload a contract file", type=['pdf', 'docx'])
 
-    if document_text:
-        # Instantiate the LLM integration class (use your actual API key)
-        llm = llm_integration.LLMIntegration(api_key="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")
+    # Check if a file has been uploaded
+    if uploaded_file is not None:
+        # Save the uploaded file temporarily
+        with open(uploaded_file.name, "wb") as f:
+            f.write(uploaded_file.getbuffer())
 
-        # Analyze the contract
-        analysis = llm.analyze_contract(document_text)
+        # Extract text from the uploaded document
+        try:
+            document_text = document_processor.process_document(uploaded_file.name)
+        except Exception as e:
+            st.error(f"Failed to process document: {e}")
+            document_text = None
 
-        # Check if the analysis is None and handle it
-        if analysis is None:
-            st.error("Failed to analyze the contract. Please try again.")
-        else:
-            # Safely access elements of analysis
-            try:
-                summary = analysis.get('summary', 'No summary available.')
-                balance_score = analysis.get('balance_score', 'N/A')
-                compliance_check = analysis.get('compliance_check', {})
-                key_clauses = analysis.get('key_clauses', [])
-                overall_assessment = analysis.get('overall_assessment', 'No overall assessment available.')
+        if document_text:
+            # Instantiate the LLM integration class (use your actual API key)
+            llm = LLMIntegration(api_key="your_api_key_here")  # Replace with your actual API key
 
-                # Display the results in the Streamlit app
-                st.header("Compliance Analysis")
+            # Analyze the contract
+            analysis = llm.analyze_contract(document_text)
 
-                # Display Contract Summary
-                st.subheader("Summary")
-                st.write(summary)
+            # Check if the analysis is None and handle it
+            if analysis is None:
+                st.error("Failed to analyze the contract. Please try again.")
+            else:
+                # Safely access elements of analysis
+                try:
+                    summary = analysis.get('summary', 'No summary available.')
+                    balance_score = analysis.get('balance_score', 'N/A')
+                    compliance_check = analysis.get('compliance_check', {})
+                    key_clauses = analysis.get('key_clauses', [])
+                    overall_assessment = analysis.get('overall_assessment', 'No overall assessment available.')
 
-                # Display Balance Score
-                st.subheader("Balance Score")
-                st.write(f"The contract balance score is: {balance_score}")
+                    # Display the results in the Streamlit app
+                    st.header("Compliance Analysis")
 
-                # Display Compliance Check
-                st.subheader("Compliance Check")
-                for law, details in compliance_check.items():
-                    st.write(f"**{law}**")
-                    st.write(f"Compliant: {details['compliant']}")
-                    if details['issues']:
-                        st.write("Issues:")
-                        for issue in details['issues']:
-                            st.write(f"- {issue}")
-                    else:
-                        st.write("No compliance issues found.")
-                    st.write("---")
+                    # Display Contract Summary
+                    st.subheader("Summary")
+                    st.write(summary)
 
-                # Display Key Clauses
-                key_clauses = analysis.get('key_clauses', [])
-                st.subheader("Key Clauses")
-                if key_clauses:
-                    for clause in key_clauses:
-                        st.write(f"**Clause Type: {clause['type']}**")
-                        st.write(f"Content: {clause['content']}")
-                        st.write(f"Analysis: {clause['analysis']}")
-                        if clause['issues']:
+                    # Display Balance Score
+                    st.subheader("Balance Score")
+                    st.write(f"The contract balance score is: {balance_score}")
+
+                    # Display Compliance Check
+                    st.subheader("Compliance Check")
+                    for law, details in compliance_check.items():
+                        st.write(f"**{law}**")
+                        st.write(f"Compliant: {details['compliant']}")
+                        if details['issues']:
                             st.write("Issues:")
-                            for issue in clause['issues']:
+                            for issue in details['issues']:
                                 st.write(f"- {issue}")
                         else:
-                            st.write("No issues found.")
+                            st.write("No compliance issues found.")
                         st.write("---")
-                else:
-                    st.write("No key clauses found.")
 
-                # Display Overall Assessment
-                st.subheader("Overall Assessment")
-                st.write(overall_assessment)
+                    # Display Key Clauses
+                    st.subheader("Key Clauses")
+                    if key_clauses:
+                        for clause in key_clauses:
+                            st.write(f"**Clause Type: {clause['type']}**")
+                            st.write(f"Content: {clause['content']}")
+                            st.write(f"Analysis: {clause['analysis']}")
+                            if clause['issues']:
+                                st.write("Issues:")
+                                for issue in clause['issues']:
+                                    st.write(f"- {issue}")
+                            else:
+                                st.write("No issues found.")
+                            st.write("---")
+                    else:
+                        st.write("No key clauses found.")
 
-                # Button to download PDF
-                if st.button("Download PDF Report"):
-                    pdf = generate_pdf(summary, balance_score, compliance_check, key_clauses, overall_assessment)
-                    pdf_output = f"{uploaded_file.name}_compliance_report.pdf"
-                    pdf.output(pdf_output)
+                    # Display Overall Assessment
+                    st.subheader("Overall Assessment")
+                    st.write(overall_assessment)
 
-                    with open(pdf_output, "rb") as f:
-                        st.download_button(label="Download PDF", data=f, file_name=pdf_output, mime="application/pdf")
+                    # Button to download PDF
+                    if st.button("Download PDF Report"):
+                        pdf = generate_pdf(summary, balance_score, compliance_check, key_clauses, overall_assessment)
+                        pdf_output = f"{uploaded_file.name}_compliance_report.pdf"
+                        pdf.output(pdf_output)
 
-            except Exception as e:
-                st.error(f"Error in processing analysis: {e}")
+                        with open(pdf_output, "rb") as f:
+                            st.download_button(label="Download PDF", data=f, file_name=pdf_output, mime="application/pdf")
+
+                except Exception as e:
+                    st.error(f"Error in processing analysis: {e}")
+
+        # Clean up the temporary file
+        if os.path.exists(uploaded_file.name):
+            os.remove(uploaded_file.name)
+
+if __name__ == "__main__":
+    main()
