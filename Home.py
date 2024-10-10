@@ -294,57 +294,19 @@ def show_contact():
 def main():
     local_css()
     
-    # Get the current query parameters
-    if "page" in st.query_params:
-        st.session_state.page = st.query_params["page"]
-    elif 'page' not in st.session_state:
-        st.session_state.page = 'home'
-    
-    selected = option_menu(
-        menu_title=None,
-        options=["Home", "Services", "About", "Contact"],
-        icons=["house-fill", "gear-fill", "info-circle-fill", "envelope-fill"],
-        menu_icon="cast",
-        default_index=0,
-        orientation="horizontal",
-        styles={
-            "container": {"padding": "0!important", "background": "linear-gradient(90deg, #1a4a4a, #2a6b6b)"},
-            "icon": {"color": "white", "font-size": "25px"}, 
-            "nav-link": {
-                "color": "white",
-                "font-size": "16px",
-                "text-align": "center",
-                "margin": "0px",
-                "--hover-color": "#ff5722",
-                "font-weight": "bold"
-            },
-            "nav-link-selected": {"background": "linear-gradient(90deg, #ff5722, #ff7043)"},
-        }
-    )
+    st.markdown("""
+        <div class='animated-gradient' style='padding: 50px; border-radius: 15px; text-align: center;'>
+            <h1>Legal Saathi</h1>
+            <h3 class='hero-text'>AI Powered Legal Document Assistant</h3>
+            <p class='hero-text' style='max-width: 800px; margin: 20px auto; font-size: 1.2rem;'>
+                <b>"Our AI-driven legal assistant simplifies complex legal documents, making them more accessible to individuals and small businesses. 
+                By utilizing advanced natural language processing, we generate bilingual legal documents that are clear, compliant, 
+                and tailored to the Indian legal framework."</b>
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # Add loading animation
-    with st.spinner("Loading..."):
-        time.sleep(0.5)  # Simulate loading
-        if selected == "Home":
-            st.session_state.page = 'home'
-        elif selected == "Services":
-            st.session_state.page = 'services'
-        elif selected == "About":
-            st.session_state.page = 'about'
-        elif selected == "Contact":
-            st.session_state.page = 'contact'
-        
-        if st.session_state.page == 'home':
-            show_home()
-        elif st.session_state.page == 'services':
-            show_services()
-        elif st.session_state.page == 'about':
-            show_about()
-        elif st.session_state.page == 'contact':
-            show_contact()
-        elif st.session_state.page in ['simplification', 'compliance', 'drafting']:
-            st.write(f"Redirecting to {st.session_state.page.capitalize()} service...")
-            st.markdown(f'<meta http-equiv="refresh" content="0;url=/{st.session_state.page}/app">', unsafe_allow_html=True)
+    show_home()
 
 if __name__ == "__main__":
     main()
