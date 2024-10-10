@@ -115,7 +115,7 @@ def local_css():
     """, unsafe_allow_html=True)
 
 def navigate_to_service(service_name):
-    st.experimental_set_query_params(page=service_name.lower())
+    st.query_params(page=service_name.lower())
 
 def show_home():
     st.markdown("""
