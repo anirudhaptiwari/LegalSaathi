@@ -17,8 +17,7 @@ def main():
         st.error("GROQ API key not found. Please check your .env file.")
         return
 
-    st.set_page_config(page_title="Legal Saathi", layout="wide")
-    st.title("Legal Saathi: AI Powered Legal Documentation Assistant")
+    st.title("Document Summary")
 
     llm = LLMIntegration()
 
