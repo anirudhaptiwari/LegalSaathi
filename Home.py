@@ -28,6 +28,7 @@ drafting_app = load_module("drafting.app")
 
 def main():
     st.title("Welcome to LegalSaathi")
+    st.write("Choose a service to get started:")
     
     # Sidebar for navigation
     st.sidebar.title("Navigation")
@@ -35,37 +36,15 @@ def main():
     st.sidebar.write(f"Current selection: {selection}")
 
     if selection == "Home":
-        st.write("Choose a service to get started:")
+        st.write("Please select a service from the sidebar to begin.")
         
-        # Create three columns for better layout
-        col1, col2, col3 = st.columns(3)
+        # Display service descriptions on home page
+        st.write("### Our Services:")
+        st.write("**Summary**: Get comprehensive summaries of legal documents")
+        st.write("**Compliance**: Check and ensure legal compliance")
+        st.write("**Drafting**: Draft legal documents with assistance")
         
-        # Summary Section
-        with col1:
-            st.write("### Summary")
-            st.write("Get comprehensive summaries of legal documents")
-            if st.button("Go to Summary"):
-                selection = "Summary"
-                run_subapp(summary_app, "Summary")
-                
-        # Compliance Section
-        with col2:
-            st.write("### Compliance")
-            st.write("Check and ensure legal compliance")
-            if st.button("Go to Compliance"):
-                selection = "Compliance"
-                run_subapp(compliance_app, "Compliance")
-                
-        # Drafting Section
-        with col3:
-            st.write("### Drafting")
-            st.write("Draft legal documents with assistance")
-            if st.button("Go to Drafting"):
-                selection = "Drafting"
-                run_subapp(drafting_app, "Drafting")
-    
-    # Handle navigation based on selection
-    if selection == "Summary":
+    elif selection == "Summary":
         run_subapp(summary_app, "Summary")
     elif selection == "Compliance":
         run_subapp(compliance_app, "Compliance")
