@@ -26,22 +26,58 @@ summary_app = load_module("summary.app")
 compliance_app = load_module("compliance.app")
 drafting_app = load_module("drafting.app")
 
+def create_service_card(title, description, key):
+    col1, col2, col3 = st.columns([0.2, 2, 0.2])
+    with col2:
+        st.write(f"### {title}")
+        st.write(description)
+        if st.button(f"Go to {title}", key=key):
+            st.session_state.navigation = title
+
 def main():
     st.title("Welcome to LegalSaathi")
-    st.write("Choose a service to get started:")
-
+    
+    # Initialize session state for navigation if it doesn't exist
+    if 'navigation' not in st.session_state:
+        st.session_state.navigation = "Home"
+    
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     selection = st.sidebar.radio("Go to", ["Home", "Summary", "Compliance", "Drafting"])
-    st.sidebar.write(f"Current selection: {selection}")
+    
+    # Update navigation based on sidebar selection
+    st.session_state.navigation = selection
+    
+    st.sidebar.write(f"Current selection: {st.session_state.navigation}")
 
-    if selection == "Home":
-        st.write("Please select a service from the sidebar to begin.")
-    elif selection == "Summary":
+    if st.session_state.navigation == "Home":
+        st.write("Select a service to get started:")
+        st.write("---")
+        
+        # Create clickable service cards
+        create_service_card(
+            "Summary",
+            "Get comprehensive summaries of legal documents",
+            "summary_button"
+        )
+        st.write("---")
+        create_service_card(
+            "Compliance",
+            "Check and ensure legal compliance",
+            "compliance_button"
+        )
+        st.write("---")
+        create_service_card(
+            "Drafting",
+            "Draft legal documents with assistance",
+            "drafting_button"
+        )
+        
+    elif st.session_state.navigation == "Summary":
         run_subapp(summary_app, "Summary")
-    elif selection == "Compliance":
+    elif st.session_state.navigation == "Compliance":
         run_subapp(compliance_app, "Compliance")
-    elif selection == "Drafting":
+    elif st.session_state.navigation == "Drafting":
         run_subapp(drafting_app, "Drafting")
 
     st.sidebar.markdown("---")
