@@ -3,6 +3,9 @@ import importlib
 import os
 import sys
 
+# Set page config at the very beginning
+st.set_page_config(page_title="LegalSaathi Multi-App", layout="wide")
+
 # Add the project root to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
@@ -20,8 +23,6 @@ compliance_app = load_module("compliance.app")
 drafting_app = load_module("drafting.app")
 
 def main():
-    st.set_page_config(page_title="LegalSaathi Multi-App", layout="wide")
-
     st.title("Welcome to LegalSaathi")
     st.write("Choose a service to get started:")
 
