@@ -1,13 +1,14 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-import subprocess
 import os
+import sys
 
 st.set_page_config(
     page_title="Legal Saathi",
     page_icon="⚖️",
     layout="wide"
 )
+
 
 
 # Custom CSS with improved visibility and gradients
@@ -121,11 +122,12 @@ def navigate_to_service(service_name):
         "Compliance": "2.compliance",
         "Drafting": "3.drafting"
     }
+    
     dir_path = service_dir.get(service_name)
     if dir_path:
         app_path = os.path.join(dir_path, "app.py")
         if os.path.exists(app_path):
-            st.experimental_set_query_params(page=service_name.lower())
+            st.session_state.page = service_name
             st.experimental_rerun()
         else:
             st.error(f"The app for {service_name} is not found.")
@@ -216,6 +218,7 @@ def show_services():
             
             if st.button(f"Try {service['title']} Now", key=f"try_{service['title'].lower()}"):
                 navigate_to_service(service['title'])
+
 def show_about():
     st.markdown("""
         <div class='gradient-header'>
@@ -304,9 +307,17 @@ def show_contact():
             </div>
         """, unsafe_allow_html=True)
 
+def load_app(app_name):
+    app_path = os.path.join(app_name, "app.py")
+    with open(app_path, "r") as f:
+        exec(f.read())
+
 def main():
     local_css()
     
+    if 'page' not in st.session_state:
+        st.session_state.page = 'Home'
+
     # Create a sidebar menu
     with st.sidebar:
         selected = option_menu(
@@ -317,23 +328,24 @@ def main():
             default_index=0,
         )
 
-    # Check if a service is selected via query parameters
-    params = st.experimental_get_query_params()
-    if "page" in params:
-        selected_service = params["page"][0].capitalize()
-        if selected_service in ["Simplification", "Compliance", "Drafting"]:
-            navigate_to_service(selected_service)
-            return
+    if selected:
+        st.session_state.page = selected
 
-    # Display the selected page
-    if selected == "Home":
+    # Display the selected page or service
+    if st.session_state.page == "Home":
         show_home()
-    elif selected == "Services":
+    elif st.session_state.page == "Services":
         show_services()
-    elif selected == "About":
+    elif st.session_state.page == "About":
         show_about()
-    elif selected == "Contact":
+    elif st.session_state.page == "Contact":
         show_contact()
+    elif st.session_state.page == "Simplification":
+        load_app("1.summary")
+    elif st.session_state.page == "Compliance":
+        load_app("2.compliance")
+    elif st.session_state.page == "Drafting":
+        load_app("3.drafting")
 
 if __name__ == "__main__":
     main()
