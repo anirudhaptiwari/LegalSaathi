@@ -1,12 +1,14 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-import time
+import subprocess
+import os
 
 st.set_page_config(
     page_title="Legal Saathi",
     page_icon="⚖️",
     layout="wide"
 )
+
 
 # Custom CSS with improved visibility and gradients
 def local_css():
@@ -114,8 +116,21 @@ def local_css():
     """, unsafe_allow_html=True)
 
 def navigate_to_service(service_name):
-    # Update the query parameters
-    st.query_params["page"] = service_name.lower()
+    service_dir = {
+        "Simplification": "1.summary",
+        "Compliance": "2.compliance",
+        "Drafting": "3.drafting"
+    }
+    dir_path = service_dir.get(service_name)
+    if dir_path:
+        app_path = os.path.join(dir_path, "app.py")
+        if os.path.exists(app_path):
+            st.experimental_set_query_params(page=service_name.lower())
+            st.experimental_rerun()
+        else:
+            st.error(f"The app for {service_name} is not found.")
+    else:
+        st.error("Invalid service selected.")
 
 def show_home():
     st.markdown("""
@@ -201,7 +216,6 @@ def show_services():
             
             if st.button(f"Try {service['title']} Now", key=f"try_{service['title'].lower()}"):
                 navigate_to_service(service['title'])
-
 def show_about():
     st.markdown("""
         <div class='gradient-header'>
@@ -293,19 +307,33 @@ def show_contact():
 def main():
     local_css()
     
-    st.markdown("""
-        <div class='animated-gradient' style='padding: 50px; border-radius: 15px; text-align: center;'>
-            <h1>Legal Saathi</h1>
-            <h3 class='hero-text'>AI Powered Legal Document Assistant</h3>
-            <p class='hero-text' style='max-width: 800px; margin: 20px auto; font-size: 1.2rem;'>
-                <b>"Our AI-driven legal assistant simplifies complex legal documents, making them more accessible to individuals and small businesses. 
-                By utilizing advanced natural language processing, we generate bilingual legal documents that are clear, compliant, 
-                and tailored to the Indian legal framework."</b>
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Create a sidebar menu
+    with st.sidebar:
+        selected = option_menu(
+            menu_title="Navigation",
+            options=["Home", "Services", "About", "Contact"],
+            icons=["house", "gear", "info-circle", "envelope"],
+            menu_icon="cast",
+            default_index=0,
+        )
 
-    show_home()
+    # Check if a service is selected via query parameters
+    params = st.experimental_get_query_params()
+    if "page" in params:
+        selected_service = params["page"][0].capitalize()
+        if selected_service in ["Simplification", "Compliance", "Drafting"]:
+            navigate_to_service(selected_service)
+            return
+
+    # Display the selected page
+    if selected == "Home":
+        show_home()
+    elif selected == "Services":
+        show_services()
+    elif selected == "About":
+        show_about()
+    elif selected == "Contact":
+        show_contact()
 
 if __name__ == "__main__":
     main()
