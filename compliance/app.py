@@ -1,13 +1,17 @@
 import streamlit as st
 import os
 import sys
+from dotenv import load_dotenv
+from fpdf import FPDF
+
+# Load environment variables
+load_dotenv()
 
 # Add the project root to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from llm_integration import LLMIntegration
 import document_processor
-from fpdf import FPDF
 
 def generate_pdf(summary, balance_score, compliance_check, key_clauses, overall_assessment):
     pdf = FPDF()
@@ -76,6 +80,14 @@ def generate_pdf(summary, balance_score, compliance_check, key_clauses, overall_
 def main():
     st.title("Compliance Checker")
 
+    # Get API key from environment variable or let user input it
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        api_key = st.text_input("Enter your OpenAI API key:", type="password")
+        if not api_key:
+            st.warning("Please enter a valid API key to proceed.")
+            return
+
     # Streamlit file uploader widget
     uploaded_file = st.file_uploader("Upload a contract file", type=['pdf', 'docx'])
 
@@ -93,15 +105,18 @@ def main():
             document_text = None
 
         if document_text:
-            # Instantiate the LLM integration class (use your actual API key)
-            llm = LLMIntegration(api_key="your_api_key_here")  # Replace with your actual API key
+            # Instantiate the LLM integration class
+            llm = LLMIntegration(api_key=api_key)
 
             # Analyze the contract
-            analysis = llm.analyze_contract(document_text)
+            try:
+                analysis = llm.analyze_contract(document_text)
+            except Exception as e:
+                st.error(f"Failed to analyze the contract: {e}")
+                analysis = None
 
-            # Check if the analysis is None and handle it
             if analysis is None:
-                st.error("Failed to analyze the contract. Please try again.")
+                st.error("Failed to analyze the contract. Please check your API key and try again.")
             else:
                 # Safely access elements of analysis
                 try:
