@@ -7,8 +7,8 @@ import docx
 import tiktoken
 import numpy as np
 
-# Initialize the OCR reader
-reader = easyocr.Reader(['en'])  # Initialize for English
+# Initialize the OCR reader with multiple languages
+reader = easyocr.Reader(['en', 'hi', 'mr'])  # Initialize for English, Hindi, and Marathi
 
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
     encoding = tiktoken.get_encoding(encoding_name)
@@ -84,7 +84,7 @@ def extract_text_from_image(image):
         # Convert PIL Image to numpy array
         image_np = np.array(image)
         
-        # Use EasyOCR to extract text
+        # Use EasyOCR to extract text in multiple languages
         result = reader.readtext(image_np)
         
         # Combine all detected text
