@@ -1,6 +1,6 @@
 import streamlit as st
-import llm_integration  # Assuming llm_integration.py is the file where LLMIntegration class is defined
-import document_processor  # Importing your document processor module
+from . import llm_integration # Assuming llm_integration.py is the file where LLMIntegration class is defined
+from . import document_processor  # Importing your document processor module
 from fpdf import FPDF  # Import the FPDF library
 
 # Streamlit file uploader widget
