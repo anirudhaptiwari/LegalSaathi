@@ -12,3 +12,4 @@ requests
 mammoth
 python-dotenv
 tiktoken
+docx2pdf
