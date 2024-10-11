@@ -35,7 +35,9 @@ def extract_text_from_pdf(file_path):
                 base_image = pdf_document.extract_image(xref)
                 image_bytes = base_image["image"]
                 image = Image.open(io.BytesIO(image_bytes))
-                text += '\n' + extract_text_from_image(image)
+                image_text = extract_text_from_image(image)
+                if image_text:
+                    text += '\n' + image_text
             
             if num_tokens_from_string(text) >= 7500:
                 break
@@ -65,7 +67,9 @@ def extract_text_from_docx(file_path):
             if "image" in rel.target_ref:
                 image_part = rel.target_part
                 image = Image.open(io.BytesIO(image_part.blob))
-                text += '\n' + extract_text_from_image(image)
+                image_text = extract_text_from_image(image)
+                if image_text:
+                    text += '\n' + image_text
         except Exception as e:
             print(f"Error processing image in DOCX: {e}")
             continue
@@ -75,7 +79,7 @@ def extract_text_from_docx(file_path):
 def extract_text_from_image(image):
     try:
         # Convert image to text using Tesseract
-        text = pytesseract.image_to_string(image, lang='mar')  # 'mar' is for Marathi language
+        text = pytesseract.image_to_string(image)
         if not text.strip():
             print("Warning: No text extracted from image")
         return text
@@ -90,7 +94,10 @@ def process_document(file_path):
     elif file_extension == '.docx':
         return extract_text_from_docx(file_path)
     elif file_extension in ['.png', '.jpg', '.jpeg', '.tiff', '.bmp']:
-        with Image.open(file_path) as image:
-            return extract_text_from_image(image)
+        try:
+            with Image.open(file_path) as image:
+                return extract_text_from_image(image)
+        except Exception as e:
+            raise ValueError(f"Error processing image file: {e}")
     else:
         raise ValueError("Unsupported file format")
