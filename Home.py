@@ -26,58 +26,50 @@ summary_app = load_module("summary.app")
 compliance_app = load_module("compliance.app")
 drafting_app = load_module("drafting.app")
 
-def create_service_card(title, description, key):
-    col1, col2, col3 = st.columns([0.2, 2, 0.2])
-    with col2:
-        st.write(f"### {title}")
-        st.write(description)
-        if st.button(f"Go to {title}", key=key):
-            st.session_state.navigation = title
-
 def main():
     st.title("Welcome to LegalSaathi")
-    
-    # Initialize session state for navigation if it doesn't exist
-    if 'navigation' not in st.session_state:
-        st.session_state.navigation = "Home"
     
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     selection = st.sidebar.radio("Go to", ["Home", "Summary", "Compliance", "Drafting"])
-    
-    # Update navigation based on sidebar selection
-    st.session_state.navigation = selection
-    
-    st.sidebar.write(f"Current selection: {st.session_state.navigation}")
+    st.sidebar.write(f"Current selection: {selection}")
 
-    if st.session_state.navigation == "Home":
-        st.write("Select a service to get started:")
-        st.write("---")
+    if selection == "Home":
+        st.write("Choose a service to get started:")
         
-        # Create clickable service cards
-        create_service_card(
-            "Summary",
-            "Get comprehensive summaries of legal documents",
-            "summary_button"
-        )
-        st.write("---")
-        create_service_card(
-            "Compliance",
-            "Check and ensure legal compliance",
-            "compliance_button"
-        )
-        st.write("---")
-        create_service_card(
-            "Drafting",
-            "Draft legal documents with assistance",
-            "drafting_button"
-        )
+        # Create three columns for better layout
+        col1, col2, col3 = st.columns(3)
         
-    elif st.session_state.navigation == "Summary":
+        # Summary Section
+        with col1:
+            st.write("### Summary")
+            st.write("Get comprehensive summaries of legal documents")
+            if st.button("Go to Summary"):
+                selection = "Summary"
+                run_subapp(summary_app, "Summary")
+                
+        # Compliance Section
+        with col2:
+            st.write("### Compliance")
+            st.write("Check and ensure legal compliance")
+            if st.button("Go to Compliance"):
+                selection = "Compliance"
+                run_subapp(compliance_app, "Compliance")
+                
+        # Drafting Section
+        with col3:
+            st.write("### Drafting")
+            st.write("Draft legal documents with assistance")
+            if st.button("Go to Drafting"):
+                selection = "Drafting"
+                run_subapp(drafting_app, "Drafting")
+    
+    # Handle navigation based on selection
+    if selection == "Summary":
         run_subapp(summary_app, "Summary")
-    elif st.session_state.navigation == "Compliance":
+    elif selection == "Compliance":
         run_subapp(compliance_app, "Compliance")
-    elif st.session_state.navigation == "Drafting":
+    elif selection == "Drafting":
         run_subapp(drafting_app, "Drafting")
 
     st.sidebar.markdown("---")
