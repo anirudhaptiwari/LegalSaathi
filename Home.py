@@ -1,9 +1,11 @@
 import streamlit as st
-import subprocess
+import importlib
 import os
 
-def run_app(app_dir):
-    subprocess.Popen(["streamlit", "run", os.path.join(app_dir, "app.py")])
+# Import the app modules
+summary_app = importlib.import_module("summary.app")
+compliance_app = importlib.import_module("compliance.app")
+drafting_app = importlib.import_module("drafting.app")
 
 def main():
     st.set_page_config(page_title="Multi-App Home", layout="wide")
@@ -11,25 +13,24 @@ def main():
     st.title("Welcome to Our Multi-App Service")
     st.write("Choose a service to get started:")
 
-    col1, col2, col3 = st.columns(3)
+    # Sidebar for navigation
+    st.sidebar.title("Navigation")
+    selection = st.sidebar.radio("Go to", ["Home", "Summary", "Compliance", "Drafting"])
 
-    with col1:
-        if st.button("Summary Service"):
-            run_app("1.summary")
-            st.success("Summary app is running. Please check the new tab or window.")
+    if selection == "Home":
+        st.write("Please select a service from the sidebar to begin.")
+    elif selection == "Summary":
+        st.write("## Summary Service")
+        summary_app.main()
+    elif selection == "Compliance":
+        st.write("## Compliance Service")
+        compliance_app.main()
+    elif selection == "Drafting":
+        st.write("## Drafting Service")
+        drafting_app.main()
 
-    with col2:
-        if st.button("Compliance Service"):
-            run_app("2.compliance")
-            st.success("Compliance app is running. Please check the new tab or window.")
-
-    with col3:
-        if st.button("Drafting Service"):
-            run_app("3.drafting")
-            st.success("Drafting app is running. Please check the new tab or window.")
-
-    st.markdown("---")
-    st.write("© 2024 Your Company Name. All rights reserved.")
+    st.sidebar.markdown("---")
+    st.sidebar.write("© 2024 Your Company Name. All rights reserved.")
 
 if __name__ == "__main__":
     main()
