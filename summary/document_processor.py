@@ -1,11 +1,14 @@
 import fitz  # PyMuPDF
 from PIL import Image
-import pytesseract
+import easyocr
 import io
 import os
 import docx
 import tiktoken
-import tempfile
+import numpy as np
+
+# Initialize the OCR reader
+reader = easyocr.Reader(['en'])  # Initialize for English
 
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
     encoding = tiktoken.get_encoding(encoding_name)
@@ -78,8 +81,15 @@ def extract_text_from_docx(file_path):
 
 def extract_text_from_image(image):
     try:
-        # Convert image to text using Tesseract
-        text = pytesseract.image_to_string(image)
+        # Convert PIL Image to numpy array
+        image_np = np.array(image)
+        
+        # Use EasyOCR to extract text
+        result = reader.readtext(image_np)
+        
+        # Combine all detected text
+        text = ' '.join([detection[1] for detection in result])
+        
         if not text.strip():
             print("Warning: No text extracted from image")
         return text
