@@ -2,6 +2,7 @@ import streamlit as st
 import importlib
 import os
 import sys
+import traceback
 
 # Set page config at the very beginning
 st.set_page_config(page_title="LegalSaathi Multi-App", layout="wide")
@@ -17,6 +18,7 @@ def load_module(module_name):
         return module
     except ImportError as e:
         st.sidebar.error(f"Failed to import {module_name}: {str(e)}")
+        st.sidebar.error(f"Traceback: {traceback.format_exc()}")
         return None
 
 # Import the app modules
@@ -31,44 +33,35 @@ def main():
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     selection = st.sidebar.radio("Go to", ["Home", "Summary", "Compliance", "Drafting"])
-
     st.sidebar.write(f"Current selection: {selection}")
 
     if selection == "Home":
         st.write("Please select a service from the sidebar to begin.")
     elif selection == "Summary":
-        if summary_app:
-            st.write("## Summary Service")
-            st.write("Attempting to run summary_app.main()")
-            try:
-                summary_app.main()
-            except Exception as e:
-                st.error(f"Error in summary_app.main(): {str(e)}")
-        else:
-            st.error("Summary service is currently unavailable.")
+        run_subapp(summary_app, "Summary")
     elif selection == "Compliance":
-        if compliance_app:
-            st.write("## Compliance Service")
-            st.write("Attempting to run compliance_app.main()")
-            try:
-                compliance_app.main()
-            except Exception as e:
-                st.error(f"Error in compliance_app.main(): {str(e)}")
-        else:
-            st.error("Compliance service is currently unavailable.")
+        run_subapp(compliance_app, "Compliance")
     elif selection == "Drafting":
-        if drafting_app:
-            st.write("## Drafting Service")
-            st.write("Attempting to run drafting_app.main()")
-            try:
-                drafting_app.main()
-            except Exception as e:
-                st.error(f"Error in drafting_app.main(): {str(e)}")
-        else:
-            st.error("Drafting service is currently unavailable.")
+        run_subapp(drafting_app, "Drafting")
 
     st.sidebar.markdown("---")
     st.sidebar.write("© 2024 LegalSaathi. All rights reserved.")
+
+def run_subapp(app_module, app_name):
+    if app_module:
+        st.write(f"## {app_name} Service")
+        st.write(f"Attempting to run {app_name.lower()}_app.main()")
+        try:
+            # Check if the module has a main function
+            if hasattr(app_module, 'main') and callable(app_module.main):
+                app_module.main()
+            else:
+                st.error(f"{app_name} module does not have a valid main() function.")
+        except Exception as e:
+            st.error(f"Error in {app_name.lower()}_app.main(): {str(e)}")
+            st.error(f"Traceback: {traceback.format_exc()}")
+    else:
+        st.error(f"{app_name} service is currently unavailable.")
 
 if __name__ == "__main__":
     main()
