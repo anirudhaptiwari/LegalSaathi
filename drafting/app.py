@@ -7,8 +7,13 @@ from docx.enum.style import WD_STYLE_TYPE
 import mammoth
 import re
 import tempfile
-from playwright.sync_api import sync_playwright
-import asyncio
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from io import BytesIO
 
 # Function to replace text in paragraphs and runs
 def replace_text_in_paragraph(paragraph, old_text, new_text):
@@ -55,54 +60,50 @@ def generate_document(selected_contract, form_details, local_file_path):
 
     return doc
 
-# Function to convert DOCX to PDF using Playwright
-def convert_docx_to_pdf(docx_path, pdf_path):
-    # Read the DOCX content
-    with open(docx_path, 'rb') as docx_file:
-        result = mammoth.convert_to_html(docx_file)
-        html_content = result.value
+# Function to convert DOCX to PDF using reportlab
+def convert_docx_to_pdf(docx_content):
+    # Convert DOCX to HTML
+    result = mammoth.convert_to_html(docx_content)
+    html_content = result.value
 
-    # Wrap HTML content with styling
-    styled_html = f"""
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                font-size: 12pt;
-                line-height: 1.5;
-                margin: 2cm;
-            }}
-            h1 {{
-                font-size: 16pt;
-                font-weight: bold;
-                margin-top: 24pt;
-                margin-bottom: 6pt;
-            }}
-            h2 {{
-                font-size: 14pt;
-                font-weight: bold;
-                margin-top: 18pt;
-                margin-bottom: 6pt;
-            }}
-            p {{
-                margin-bottom: 10pt;
-            }}
-        </style>
-    </head>
-    <body>
-        {html_content}
-    </body>
-    </html>
-    """
+    # Create a PDF buffer
+    buffer = BytesIO()
 
-    # Use Playwright to generate PDF
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-        page.set_content(styled_html)
-        page.pdf(path=pdf_path, format='A4')
-        browser.close()
+    # Create the PDF document
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+    # Create styles
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Justify', alignment=TA_JUSTIFY))
+    styles.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
+
+    # Create a list to hold the flowables
+    flowables = []
+
+    # Split the HTML content into paragraphs
+    paragraphs = re.split('</p>|</h1>|</h2>', html_content)
+
+    for p in paragraphs:
+        if p.strip():
+            if p.startswith('<h1'):
+                p = p.replace('<h1>', '').replace('</h1>', '')
+                flowables.append(Paragraph(p, styles['Heading1']))
+            elif p.startswith('<h2'):
+                p = p.replace('<h2>', '').replace('</h2>', '')
+                flowables.append(Paragraph(p, styles['Heading2']))
+            else:
+                p = p.replace('<p>', '').replace('</p>', '')
+                flowables.append(Paragraph(p, styles['Justify']))
+            flowables.append(Spacer(1, 12))
+
+    # Build the PDF
+    doc.build(flowables)
+
+    # Get the value of the BytesIO buffer
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+
+    return pdf_bytes
 
 # CSS for styling the preview
 preview_css = """
@@ -233,12 +234,8 @@ def main():
             doc.save(output_docx_path)
 
             # Convert to PDF
-            output_pdf_path = output_docx_path.replace('.docx', '.pdf')
-            try:
-                convert_docx_to_pdf(output_docx_path, output_pdf_path)
-            except Exception as e:
-                st.error(f"Error converting to PDF: {e}")
-                output_pdf_path = None
+            with open(tmp_file_path, 'rb') as docx_file:
+                pdf_bytes = convert_docx_to_pdf(docx_file)
 
             # Download buttons
             st.subheader("Download Options")
@@ -255,16 +252,12 @@ def main():
             )
 
             # PDF download
-            if output_pdf_path and os.path.exists(output_pdf_path):
-                with open(output_pdf_path, 'rb') as f:
-                    pdf_bytes = f.read()
-                
-                st.download_button(
-                    label="Download Contract (PDF)",
-                    data=pdf_bytes,
-                    file_name=f'{selected_contract.lower().replace(" ", "_")}.pdf',
-                    mime='application/pdf'
-                )
+            st.download_button(
+                label="Download Contract (PDF)",
+                data=pdf_bytes,
+                file_name=f'{selected_contract.lower().replace(" ", "_")}.pdf',
+                mime='application/pdf'
+            )
 
             # Remove the temporary file
             os.unlink(tmp_file_path)
