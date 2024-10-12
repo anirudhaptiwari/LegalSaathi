@@ -28,36 +28,62 @@ drafting_app = load_module("drafting.app")
 
 def main():
     st.title("Welcome to LegalSaathi")
-    st.write("Choose a service to get started:")
     
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     selection = st.sidebar.radio("Go to", ["Home", "Summary", "Compliance", "Drafting"])
-    st.sidebar.write(f"Current selection: {selection}")
-
-    if selection == "Home":
-        st.write("Please select a service from the sidebar to begin.")
+    
+    # Initialize session state
+    if 'page' not in st.session_state:
+        st.session_state.page = 'Home'
+    
+    # Update session state based on sidebar selection
+    if selection != st.session_state.page:
+        st.session_state.page = selection
+    
+    # Home page content
+    if st.session_state.page == "Home":
+        st.write("Choose a service to get started:")
         
         # Display service descriptions on home page
         st.write("### Our Services:")
-        st.write("**Summary**: Get comprehensive summaries of legal documents")
-        st.write("**Compliance**: Check and ensure legal compliance")
-        st.write("**Drafting**: Draft legal documents with assistance")
+        col1, col2, col3 = st.columns(3)
         
-    elif selection == "Summary":
+        with col1:
+            st.write("**Summary**")
+            st.write("Get comprehensive summaries of legal documents")
+            if st.button("Go to Summary"):
+                st.session_state.page = "Summary"
+                st.experimental_rerun()
+        
+        with col2:
+            st.write("**Compliance**")
+            st.write("Check and ensure legal compliance")
+            if st.button("Go to Compliance"):
+                st.session_state.page = "Compliance"
+                st.experimental_rerun()
+        
+        with col3:
+            st.write("**Drafting**")
+            st.write("Draft legal documents with assistance")
+            if st.button("Go to Drafting"):
+                st.session_state.page = "Drafting"
+                st.experimental_rerun()
+    
+    # Sub-app pages
+    elif st.session_state.page == "Summary":
         run_subapp(summary_app, "Summary")
-    elif selection == "Compliance":
+    elif st.session_state.page == "Compliance":
         run_subapp(compliance_app, "Compliance")
-    elif selection == "Drafting":
+    elif st.session_state.page == "Drafting":
         run_subapp(drafting_app, "Drafting")
-
+    
     st.sidebar.markdown("---")
     st.sidebar.write("© 2024 LegalSaathi. All rights reserved.")
 
 def run_subapp(app_module, app_name):
     if app_module:
         st.write(f"## {app_name} Service")
-        st.write(f"Attempting to run {app_name.lower()}_app.main()")
         try:
             # Check if the module has a main function
             if hasattr(app_module, 'main') and callable(app_module.main):
