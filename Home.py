@@ -3,7 +3,6 @@ import importlib
 import os
 import sys
 import traceback
-from streamlit.web.server.websocket_headers import get_url_params
 
 # Set page config at the very beginning
 st.set_page_config(page_title="LegalSaathi Multi-App", layout="wide")
@@ -29,29 +28,25 @@ drafting_app = load_module("drafting.app")
 def main():
     st.title("Welcome to LegalSaathi")
     
-    # Get the current page from URL parameters
-    params = get_url_params()
-    current_page = params.get("page", ["Home"])[0]
+    # Initialize session state for navigation
+    if 'page' not in st.session_state:
+        st.session_state.page = 'Home'
 
     # Sidebar for navigation
     st.sidebar.title("Navigation")
     
-    # Create navigation links
+    # Create navigation buttons
     if st.sidebar.button("Home"):
-        st.experimental_set_query_params(page="Home")
-        st.experimental_rerun()
+        st.session_state.page = "Home"
     if st.sidebar.button("Summary"):
-        st.experimental_set_query_params(page="Summary")
-        st.experimental_rerun()
+        st.session_state.page = "Summary"
     if st.sidebar.button("Compliance"):
-        st.experimental_set_query_params(page="Compliance")
-        st.experimental_rerun()
+        st.session_state.page = "Compliance"
     if st.sidebar.button("Drafting"):
-        st.experimental_set_query_params(page="Drafting")
-        st.experimental_rerun()
+        st.session_state.page = "Drafting"
 
     # Display content based on the current page
-    if current_page == "Home":
+    if st.session_state.page == "Home":
         st.write("Please select a service from the sidebar to begin.")
         
         # Display service descriptions on home page
@@ -60,11 +55,11 @@ def main():
         st.write("**Compliance**: Check and ensure legal compliance")
         st.write("**Drafting**: Draft legal documents with assistance")
     
-    elif current_page == "Summary":
+    elif st.session_state.page == "Summary":
         run_subapp(summary_app, "Summary")
-    elif current_page == "Compliance":
+    elif st.session_state.page == "Compliance":
         run_subapp(compliance_app, "Compliance")
-    elif current_page == "Drafting":
+    elif st.session_state.page == "Drafting":
         run_subapp(drafting_app, "Drafting")
     
     st.sidebar.markdown("---")
