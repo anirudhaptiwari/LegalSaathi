@@ -1,13 +1,12 @@
 import streamlit as st
+import os
+import json
 from docx import Document
 from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
-import os
-import json
 import mammoth
 import re
 from docx2pdf import convert
-import io
 import tempfile
 
 # Function to replace text in paragraphs and runs
@@ -21,7 +20,11 @@ def replace_text_in_paragraph(paragraph, old_text, new_text):
 
 # Function to generate the document
 def generate_document(selected_contract, form_details, local_file_path):
-    doc = Document(local_file_path)
+    try:
+        doc = Document(local_file_path)
+    except Exception as e:
+        st.error(f"Error opening document: {e}")
+        return None
 
     # Create styles if they don't exist
     styles = doc.styles
@@ -81,17 +84,38 @@ preview_css = """
 """
 
 def main():
+    st.set_page_config(page_title="Contract Generator", layout="wide")
+
+    # Get the absolute path of the current script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
     # Ensure the docs directory exists
-    docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
+    docs_dir = os.path.join(current_dir, '..', 'docs')
     os.makedirs(docs_dir, exist_ok=True)
 
     # Load contract types from JSON file
-    with open(os.path.join(os.path.dirname(__file__), 'contract_types.json'), 'r') as f:
-        contract_types = json.load(f)
+    contract_types_path = os.path.join(current_dir, 'contract_types.json')
+    try:
+        with open(contract_types_path, 'r') as f:
+            contract_types = json.load(f)
+    except FileNotFoundError:
+        st.error(f"Contract types file not found: {contract_types_path}")
+        return
+    except json.JSONDecodeError:
+        st.error(f"Error parsing contract types JSON file: {contract_types_path}")
+        return
 
     # Load placeholder questions from JSON file
-    with open(os.path.join(os.path.dirname(__file__), 'placeholder_questions.json'), 'r') as f:
-        placeholder_questions = json.load(f)
+    placeholder_questions_path = os.path.join(current_dir, 'placeholder_questions.json')
+    try:
+        with open(placeholder_questions_path, 'r') as f:
+            placeholder_questions = json.load(f)
+    except FileNotFoundError:
+        st.error(f"Placeholder questions file not found: {placeholder_questions_path}")
+        return
+    except json.JSONDecodeError:
+        st.error(f"Error parsing placeholder questions JSON file: {placeholder_questions_path}")
+        return
 
     # Sidebar: Contract Types
     st.sidebar.title("Corporate & Business Contracts")
@@ -103,12 +127,26 @@ def main():
         st.subheader("Please fill in the following details:")
 
         # Get the document template path
-        template_path = contract_types[selected_contract]
+        template_path = contract_types.get(selected_contract)
+        if not template_path:
+            st.error(f"Template path not found for {selected_contract}")
+            return
+
         local_file_path = os.path.join(docs_dir, template_path)
+
+        # Debug information
+        st.sidebar.subheader("Debug Information")
+        st.sidebar.text(f"Docs directory: {docs_dir}")
+        st.sidebar.text(f"Template path: {template_path}")
+        st.sidebar.text(f"Local file path: {local_file_path}")
+
+        if not os.path.exists(local_file_path):
+            st.error(f"Template file not found: {local_file_path}")
+            return
 
         # Create input fields for each placeholder
         form_details = {}
-        for placeholder, question in placeholder_questions[selected_contract].items():
+        for placeholder, question in placeholder_questions.get(selected_contract, {}).items():
             form_details[placeholder] = st.text_input(question)
 
         # Button to generate preview and enable downloads
@@ -117,6 +155,8 @@ def main():
 
             # Generate the document
             doc = generate_document(selected_contract, form_details, local_file_path)
+            if doc is None:
+                return
 
             # Save the document to a temporary file
             with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp_file:
@@ -124,9 +164,13 @@ def main():
                 tmp_file_path = tmp_file.name
 
             # Convert the document to HTML for preview
-            with open(tmp_file_path, 'rb') as docx_file:
-                result = mammoth.convert_to_html(docx_file)
-                html_content = result.value
+            try:
+                with open(tmp_file_path, 'rb') as docx_file:
+                    result = mammoth.convert_to_html(docx_file)
+                    html_content = result.value
+            except Exception as e:
+                st.error(f"Error converting document to HTML: {e}")
+                return
 
             # Wrap the HTML content with our custom CSS
             styled_html = f"{preview_css}<div class='contract-preview'>{html_content}</div>"
@@ -140,8 +184,12 @@ def main():
             doc.save(output_docx_path)
 
             # Convert to PDF
-            output_pdf_path = output_docx_path.replace('.docx', '.pdf')
-            convert(output_docx_path, output_pdf_path)
+            try:
+                output_pdf_path = output_docx_path.replace('.docx', '.pdf')
+                convert(output_docx_path, output_pdf_path)
+            except Exception as e:
+                st.error(f"Error converting to PDF: {e}")
+                output_pdf_path = None
 
             # Download buttons
             st.subheader("Download Options")
@@ -158,15 +206,16 @@ def main():
             )
 
             # PDF download
-            with open(output_pdf_path, 'rb') as f:
-                pdf_bytes = f.read()
-            
-            st.download_button(
-                label="Download Contract (PDF)",
-                data=pdf_bytes,
-                file_name=f'{selected_contract.lower().replace(" ", "_")}.pdf',
-                mime='application/pdf'
-            )
+            if output_pdf_path and os.path.exists(output_pdf_path):
+                with open(output_pdf_path, 'rb') as f:
+                    pdf_bytes = f.read()
+                
+                st.download_button(
+                    label="Download Contract (PDF)",
+                    data=pdf_bytes,
+                    file_name=f'{selected_contract.lower().replace(" ", "_")}.pdf',
+                    mime='application/pdf'
+                )
 
             # Remove the temporary file
             os.unlink(tmp_file_path)
