@@ -84,7 +84,6 @@ preview_css = """
 """
 
 def main():
-    st.set_page_config(page_title="Contract Generator", layout="wide")
 
     # Get the absolute path of the current script
     current_dir = os.path.dirname(os.path.abspath(__file__))
