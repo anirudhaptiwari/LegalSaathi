@@ -1,8 +1,8 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
-from .document_processor import process_document
-from .llm_integration import LLMIntegration
+from document_processor import process_document
+from llm_integration import LLMIntegration
 import tiktoken
 
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
