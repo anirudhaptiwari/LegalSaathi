@@ -33,49 +33,20 @@ def main():
     st.sidebar.title("Navigation")
     selection = st.sidebar.radio("Go to", ["Home", "Summary", "Compliance", "Drafting"])
     
-    # Initialize session state
-    if 'page' not in st.session_state:
-        st.session_state.page = 'Home'
-    
-    # Update session state based on sidebar selection
-    if selection != st.session_state.page:
-        st.session_state.page = selection
-    
-    # Home page content
-    if st.session_state.page == "Home":
-        st.write("Choose a service to get started:")
+    if selection == "Home":
+        st.write("Please select a service from the sidebar to begin.")
         
         # Display service descriptions on home page
         st.write("### Our Services:")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.write("**Summary**")
-            st.write("Get comprehensive summaries of legal documents")
-            if st.button("Go to Summary"):
-                st.session_state.page = "Summary"
-                st.experimental_rerun()
-        
-        with col2:
-            st.write("**Compliance**")
-            st.write("Check and ensure legal compliance")
-            if st.button("Go to Compliance"):
-                st.session_state.page = "Compliance"
-                st.experimental_rerun()
-        
-        with col3:
-            st.write("**Drafting**")
-            st.write("Draft legal documents with assistance")
-            if st.button("Go to Drafting"):
-                st.session_state.page = "Drafting"
-                st.experimental_rerun()
+        st.write("**Summary**: Get comprehensive summaries of legal documents")
+        st.write("**Compliance**: Check and ensure legal compliance")
+        st.write("**Drafting**: Draft legal documents with assistance")
     
-    # Sub-app pages
-    elif st.session_state.page == "Summary":
+    elif selection == "Summary":
         run_subapp(summary_app, "Summary")
-    elif st.session_state.page == "Compliance":
+    elif selection == "Compliance":
         run_subapp(compliance_app, "Compliance")
-    elif st.session_state.page == "Drafting":
+    elif selection == "Drafting":
         run_subapp(drafting_app, "Drafting")
     
     st.sidebar.markdown("---")
