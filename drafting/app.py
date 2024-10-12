@@ -6,8 +6,9 @@ from docx.shared import Pt
 from docx.enum.style import WD_STYLE_TYPE
 import mammoth
 import re
-from docx2pdf import convert
 import tempfile
+from weasyprint import HTML, CSS
+from weasyprint.text.fonts import FontConfiguration
 
 # Function to replace text in paragraphs and runs
 def replace_text_in_paragraph(paragraph, old_text, new_text):
@@ -53,6 +54,55 @@ def generate_document(selected_contract, form_details, local_file_path):
                 replace_text_in_paragraph(paragraph, match, value)
 
     return doc
+
+# Function to convert DOCX to PDF using WeasyPrint
+def convert_docx_to_pdf(docx_path, pdf_path):
+    # Read the DOCX content
+    with open(docx_path, 'rb') as docx_file:
+        result = mammoth.convert_to_html(docx_file)
+        html_content = result.value
+
+    # Define CSS for PDF styling
+    css_content = '''
+    @page {
+        size: letter;
+        margin: 2cm;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 12pt;
+        line-height: 1.5;
+    }
+    h1 {
+        font-size: 16pt;
+        font-weight: bold;
+        margin-top: 24pt;
+        margin-bottom: 6pt;
+    }
+    h2 {
+        font-size: 14pt;
+        font-weight: bold;
+        margin-top: 18pt;
+        margin-bottom: 6pt;
+    }
+    p {
+        margin-bottom: 10pt;
+    }
+    '''
+
+    # Create a temporary HTML file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as temp_html:
+        temp_html.write(f'<html><head><style>{css_content}</style></head><body>{html_content}</body></html>')
+        temp_html_path = temp_html.name
+
+    # Configure fonts
+    font_config = FontConfiguration()
+
+    # Generate PDF using WeasyPrint
+    HTML(temp_html_path).write_pdf(pdf_path, font_config=font_config)
+
+    # Remove temporary HTML file
+    os.unlink(temp_html_path)
 
 # CSS for styling the preview
 preview_css = """
@@ -182,10 +232,10 @@ def main():
             output_docx_path = os.path.join(docs_dir, f'{selected_contract.lower().replace(" ", "_")}_output.docx')
             doc.save(output_docx_path)
 
-            # Convert to PDF
+            # Convert to PDF using WeasyPrint
+            output_pdf_path = output_docx_path.replace('.docx', '.pdf')
             try:
-                output_pdf_path = output_docx_path.replace('.docx', '.pdf')
-                convert(output_docx_path, output_pdf_path)
+                convert_docx_to_pdf(output_docx_path, output_pdf_path)
             except Exception as e:
                 st.error(f"Error converting to PDF: {e}")
                 output_pdf_path = None
