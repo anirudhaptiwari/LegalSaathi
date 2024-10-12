@@ -15,3 +15,4 @@ tiktoken
 docx2pdf
 easyocr
 weasyprint
+playwright
