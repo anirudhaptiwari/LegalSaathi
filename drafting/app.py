@@ -84,12 +84,11 @@ preview_css = """
 """
 
 def main():
-
-    # Get the absolute path of the current script
+    # Get the absolute path of the current script (drafting/app.py)
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Ensure the docs directory exists
-    docs_dir = os.path.join(current_dir, '..', 'docs')
+    # Set the docs directory path (now inside the drafting directory)
+    docs_dir = os.path.join(current_dir, 'docs')
     os.makedirs(docs_dir, exist_ok=True)
 
     # Load contract types from JSON file
@@ -135,6 +134,7 @@ def main():
 
         # Debug information
         st.sidebar.subheader("Debug Information")
+        st.sidebar.text(f"Current directory: {current_dir}")
         st.sidebar.text(f"Docs directory: {docs_dir}")
         st.sidebar.text(f"Template path: {template_path}")
         st.sidebar.text(f"Local file path: {local_file_path}")
