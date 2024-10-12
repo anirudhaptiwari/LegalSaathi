@@ -24,7 +24,7 @@ def load_module(module_name):
 # Import the app modules
 summary_app = load_module("summary.app")
 compliance_app = load_module("compliance.app")
-drafting_app = load_module("drafting.drafter")
+drafting_app = load_module("drafting.app")
 
 def main():
     st.title("Welcome to LegalSaathi")
