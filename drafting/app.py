@@ -7,8 +7,8 @@ from docx.enum.style import WD_STYLE_TYPE
 import mammoth
 import re
 import tempfile
-from weasyprint import HTML, CSS
-from weasyprint.text.fonts import FontConfiguration
+from playwright.sync_api import sync_playwright
+import asyncio
 
 # Function to replace text in paragraphs and runs
 def replace_text_in_paragraph(paragraph, old_text, new_text):
@@ -55,54 +55,54 @@ def generate_document(selected_contract, form_details, local_file_path):
 
     return doc
 
-# Function to convert DOCX to PDF using WeasyPrint
+# Function to convert DOCX to PDF using Playwright
 def convert_docx_to_pdf(docx_path, pdf_path):
     # Read the DOCX content
     with open(docx_path, 'rb') as docx_file:
         result = mammoth.convert_to_html(docx_file)
         html_content = result.value
 
-    # Define CSS for PDF styling
-    css_content = '''
-    @page {
-        size: letter;
-        margin: 2cm;
-    }
-    body {
-        font-family: Arial, sans-serif;
-        font-size: 12pt;
-        line-height: 1.5;
-    }
-    h1 {
-        font-size: 16pt;
-        font-weight: bold;
-        margin-top: 24pt;
-        margin-bottom: 6pt;
-    }
-    h2 {
-        font-size: 14pt;
-        font-weight: bold;
-        margin-top: 18pt;
-        margin-bottom: 6pt;
-    }
-    p {
-        margin-bottom: 10pt;
-    }
-    '''
+    # Wrap HTML content with styling
+    styled_html = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                font-size: 12pt;
+                line-height: 1.5;
+                margin: 2cm;
+            }}
+            h1 {{
+                font-size: 16pt;
+                font-weight: bold;
+                margin-top: 24pt;
+                margin-bottom: 6pt;
+            }}
+            h2 {{
+                font-size: 14pt;
+                font-weight: bold;
+                margin-top: 18pt;
+                margin-bottom: 6pt;
+            }}
+            p {{
+                margin-bottom: 10pt;
+            }}
+        </style>
+    </head>
+    <body>
+        {html_content}
+    </body>
+    </html>
+    """
 
-    # Create a temporary HTML file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as temp_html:
-        temp_html.write(f'<html><head><style>{css_content}</style></head><body>{html_content}</body></html>')
-        temp_html_path = temp_html.name
-
-    # Configure fonts
-    font_config = FontConfiguration()
-
-    # Generate PDF using WeasyPrint
-    HTML(temp_html_path).write_pdf(pdf_path, font_config=font_config)
-
-    # Remove temporary HTML file
-    os.unlink(temp_html_path)
+    # Use Playwright to generate PDF
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.set_content(styled_html)
+        page.pdf(path=pdf_path, format='A4')
+        browser.close()
 
 # CSS for styling the preview
 preview_css = """
@@ -232,7 +232,7 @@ def main():
             output_docx_path = os.path.join(docs_dir, f'{selected_contract.lower().replace(" ", "_")}_output.docx')
             doc.save(output_docx_path)
 
-            # Convert to PDF using WeasyPrint
+            # Convert to PDF
             output_pdf_path = output_docx_path.replace('.docx', '.pdf')
             try:
                 convert_docx_to_pdf(output_docx_path, output_pdf_path)
