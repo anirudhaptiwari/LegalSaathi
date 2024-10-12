@@ -16,3 +16,4 @@ docx2pdf
 easyocr
 weasyprint
 playwright
+reportlab
