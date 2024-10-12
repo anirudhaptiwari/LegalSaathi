@@ -1,6 +1,15 @@
+[server]
+enableXsrfProtection = false
+
+[browser]
+serverAddress = "0.0.0.0"
+
 [theme]
-primaryColor = "#ff5722"
-backgroundColor = "#1a4a4a"
-secondaryBackgroundColor = "#2a6b6b"
-textColor = "#ffffff"
+primaryColor = "#F63366"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
 font = "sans serif"
+
+[runner]
+pythonPath = "/path/to/your/venv/bin/python"
