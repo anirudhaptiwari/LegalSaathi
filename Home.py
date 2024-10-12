@@ -10,7 +10,8 @@ st.set_page_config(page_title="LegalSaathi Multi-App", layout="wide")
 # Add the project root to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
-
+summary_dir = os.path.join(os.path.dirname(__file__), 'summary')
+sys.path.append(summary_dir)
 def load_module(module_name):
     try:
         module = importlib.import_module(module_name)
