@@ -14,3 +14,4 @@ python-dotenv
 tiktoken
 docx2pdf
 easyocr
+weasyprint
