@@ -1,6 +1,7 @@
 import groq
 import json
 import os
+from document_processor import truncate_text
 
 class LLMIntegration:
     def __init__(self, api_key=None):
@@ -11,13 +12,16 @@ class LLMIntegration:
         self.client = groq.Groq(api_key=api_key)
 
     def analyze_contract(self, contract_text):
+        # Truncate the contract text to fit within the model's token limit
+        truncated_contract_text = truncate_text(contract_text, max_tokens=7500)
+        
         prompt = f"""
         Analyze the following contract for compliance with Indian laws including the Companies Act, 2013, the Code of Wages, 2019, Occupational Safety, Health and Working Conditions Code, 2020, the Code on Social Security, 2020, and the Industrial Relations Code, 2020. 
 
         Highlight any sections that may not comply with these laws and provide a structured response in JSON format:
 
         Contract text:
-        {contract_text[:4000]}
+        {truncated_contract_text}
 
         Please provide the analysis in the following JSON structure:
         {{
