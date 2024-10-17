@@ -9,7 +9,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
 from compliance.llm_integration import LLMIntegration
-from document_processor import process_document, num_tokens_from_string
+from compliance.document_processor import process_document, num_tokens_from_string
 
 # Set the GROQ API key
 os.environ["GROQ_API_KEY"] = "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"
