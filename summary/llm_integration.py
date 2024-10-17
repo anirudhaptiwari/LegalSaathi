@@ -38,12 +38,12 @@ class LLMIntegration:
         """
 
         response = self.client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": f"You are an AI legal assistant specialized in analyzing {input_language} legal documents and providing insights in {output_language}."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.2,
+            temperature=0.3,
             max_tokens=4000,
         )
 
