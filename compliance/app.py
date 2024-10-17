@@ -9,7 +9,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
 from compliance.llm_integration import LLMIntegration
-from compliance.document_processor import process_document, num_tokens_from_string
+from compliance.document_processor import process_document
 
 # Set the GROQ API key
 os.environ["GROQ_API_KEY"] = "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"
@@ -17,7 +17,7 @@ os.environ["GROQ_API_KEY"] = "gsk_arnnhHPlRS5bPDtJPxhTWGdyb3FYtNEPXTSU9WsVgyurX5
 def main():
     st.title("Compliance Checker")
     
-    uploaded_file = st.file_uploader("Upload a contract file", type=['pdf', 'docx', 'png', 'jpg', 'jpeg', 'tiff', 'bmp'])
+    uploaded_file = st.file_uploader("Upload a contract file", type=['pdf', 'docx'])
 
     if uploaded_file is not None:
         with st.spinner("Processing document..."):
@@ -28,11 +28,6 @@ def main():
             try:
                 document_text = process_document(uploaded_file.name)
                 st.success("Document processed successfully!")
-                
-                # Display token count
-                token_count = num_tokens_from_string(document_text)
-                st.info(f"Document token count: {token_count}")
-                
             except Exception as e:
                 st.error(f"Failed to process document: {e}")
                 return
