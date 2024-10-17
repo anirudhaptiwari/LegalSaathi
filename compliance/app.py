@@ -8,7 +8,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-from compliance.llm_integration import LLMIntegration
+from llm_integration import LLMIntegration
 from compliance.document_processor import process_document
 
 # Set the GROQ API key
