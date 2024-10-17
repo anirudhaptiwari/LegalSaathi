@@ -14,12 +14,14 @@ from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
 from io import BytesIO
 
 # Function to replace text in paragraphs and runs
-def replace_text_in_paragraph(paragraph, old_text, new_text):
-    if old_text in paragraph.text:
+def replace_text_in_paragraph(paragraph, placeholder, new_text):
+    # Pattern to match both [placeholder] and [Insert Type: placeholder] formats
+    pattern = rf'\[(?:.*?:)?\s*{re.escape(placeholder)}\]'
+    if re.search(pattern, paragraph.text):
         inline = paragraph.runs
         for i in range(len(inline)):
-            if old_text in inline[i].text:
-                text = inline[i].text.replace(old_text, new_text)
+            if re.search(pattern, inline[i].text):
+                text = re.sub(pattern, new_text, inline[i].text)
                 inline[i].text = text
 
 # Function to generate the document
@@ -51,7 +53,7 @@ def generate_document(selected_contract, form_details, local_file_path):
         
         # Replace placeholders
         for placeholder, value in form_details.items():
-            replace_text_in_paragraph(paragraph, f"[{placeholder}]", value)
+            replace_text_in_paragraph(paragraph, placeholder, value)
 
     return doc
 
