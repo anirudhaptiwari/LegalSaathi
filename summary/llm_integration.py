@@ -17,30 +17,30 @@ class LLMIntegration:
         truncated = encoded[:max_tokens]
         return encoding.decode(truncated)
 
-    def analyze_document(self, document_text):
+    def analyze_document(self, document_text, input_language, output_language):
         document_text = self._truncate_text(document_text)
-
         prompt = f"""
-        Analyze the following legal document in Marathi. Provide a comprehensive analysis including a summary, key points, legal implications, and recommended actions. If you're not confident about certain aspects, please indicate that.
+        Analyze the following legal document in {input_language}. Provide a comprehensive analysis including a summary, key points, legal implications, and recommended actions. If you're not confident about certain aspects, please indicate that.
 
         Document text:
         {document_text}
 
-        Please provide the analysis in the following JSON structure:
+        Please provide the analysis in {output_language} using the following JSON structure:
         {{
-            "summary": "A brief summary of the entire document in English",
-            "key_points": ["List of key points from the document in English"],
+            "summary": "A brief summary of the entire document",
+            "key_points": ["List of key points from the document"],
             "legal_implications": ["List of potential legal implications based on the document content"],
             "recommended_actions": ["List of recommended actions based on the document content"]
         }}
 
         Ensure that your response is valid JSON. Escape any special characters in the text fields.
+        The response should be a simplified yet legally valid summary of the document in {output_language}.
         """
 
         response = self.client.chat.completions.create(
             model="llama-3.1-70b-versatile",
             messages=[
-                {"role": "system", "content": "You are an AI legal assistant specialized in analyzing Marathi legal documents and providing insights in English."},
+                {"role": "system", "content": f"You are an AI legal assistant specialized in analyzing {input_language} legal documents and providing insights in {output_language}."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.2,
