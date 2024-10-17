@@ -17,9 +17,12 @@ def main():
         st.error("GROQ API key not found. Please check your .env file.")
         return
 
-    st.title("Document Summary")
+    st.title("Multilingual Document Summary")
 
     llm = LLMIntegration()
+
+    input_language = st.selectbox("Select input document language", ["English", "Hindi", "Marathi"])
+    output_language = st.selectbox("Select output summary language", ["English", "Hindi", "Marathi"])
 
     uploaded_files = st.file_uploader("Choose PDF, DOCX, or image files", type=["pdf", "docx", "png", "jpg", "jpeg", "tiff", "bmp"], accept_multiple_files=True)
 
@@ -27,7 +30,6 @@ def main():
         for uploaded_file in uploaded_files:
             file_name = uploaded_file.name
             file_extension = os.path.splitext(file_name)[1].lower()
-
             temp_file_path = f"temp_document{file_extension}"
             with open(temp_file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
@@ -36,7 +38,7 @@ def main():
                 document_text = process_document(temp_file_path)
                 
                 token_count = num_tokens_from_string(document_text)
-                if token_count > 8000:  # Llama 3.1 70B has a max_tokens limit of 8k
+                if token_count > 8000:
                     st.warning(f"Document text exceeds API limit (8000 tokens). Current token count: {token_count}. The text will be truncated.")
                     document_text = document_text[:int(len(document_text) * (8000 / token_count))]
                     st.info(f"Truncated token count: {num_tokens_from_string(document_text)}")
@@ -46,20 +48,17 @@ def main():
                 st.subheader(f"Summary for {file_name}")
                 
                 with st.spinner("Analyzing the document..."):
-                    analysis = llm.analyze_document(document_text)
+                    analysis = llm.analyze_document(document_text, input_language, output_language)
 
                 if analysis:
                     st.write("**Summary:**")
                     st.write(analysis.get("summary", "No summary available"))
-
                     st.write("**Key Points:**")
                     for point in analysis.get("key_points", []):
                         st.write(f"• {point}")
-
                     st.write("**Legal Implications:**")
                     for implication in analysis.get("legal_implications", []):
                         st.write(f"• {implication}")
-
                     st.write("**Recommended Actions:**")
                     for action in analysis.get("recommended_actions", []):
                         st.write(f"• {action}")
@@ -68,7 +67,6 @@ def main():
                     st.write("Error details:")
                     st.write(f"Document text (first 500 characters): {document_text[:500]}...")
                     st.write(f"Token count: {num_tokens_from_string(document_text)}")
-
             except ValueError as e:
                 st.error(f"Error processing document: {e}")
             finally:
