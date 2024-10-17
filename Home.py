@@ -22,9 +22,9 @@ def load_module(module_name):
         return None
 
 # Import the app modules
-summary_app = load_module("summary.app")
-compliance_app = load_module("compliance.app")
-drafting_app = load_module("drafting.app")
+summary_app = load_module("summary.App")
+compliance_app = load_module("compliance.App")
+drafting_app = load_module("drafting.App")
 
 def main():
     st.title("Welcome to LegalSaathi")
