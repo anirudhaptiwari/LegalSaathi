@@ -11,8 +11,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
 
 # Function to replace text in paragraphs and runs
@@ -46,17 +44,14 @@ def generate_document(selected_contract, form_details, local_file_path):
     # Apply formatting and replacements
     for paragraph in doc.paragraphs:
         # Apply heading styles
-        if paragraph.text.startswith("SERVICE AGREEMENT") or paragraph.text.startswith("NON-DISCLOSURE AGREEMENT"):
+        if paragraph.text.startswith(selected_contract.upper()):
             paragraph.style = styles['Heading 1']
         elif paragraph.text.strip().startswith(("1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11.", "12.")):
             paragraph.style = styles['Heading 2']
         
         # Replace placeholders
         for placeholder, value in form_details.items():
-            pattern = rf'\[.*?:\s*{re.escape(placeholder)}\]'
-            matches = re.findall(pattern, paragraph.text)
-            for match in matches:
-                replace_text_in_paragraph(paragraph, match, value)
+            replace_text_in_paragraph(paragraph, f"[{placeholder}]", value)
 
     return doc
 
@@ -135,10 +130,10 @@ preview_css = """
 """
 
 def main():
-    # Get the absolute path of the current script (drafting/app.py)
+    # Get the absolute path of the current script
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Set the docs directory path (now inside the drafting directory)
+    # Set the docs directory path
     docs_dir = os.path.join(current_dir, 'docs')
     os.makedirs(docs_dir, exist_ok=True)
 
@@ -176,19 +171,12 @@ def main():
         st.subheader("Please fill in the following details:")
 
         # Get the document template path
-        template_path = contract_types.get(selected_contract)
-        if not template_path:
-            st.error(f"Template path not found for {selected_contract}")
+        template_filename = contract_types.get(selected_contract)
+        if not template_filename:
+            st.error(f"Template filename not found for {selected_contract}")
             return
 
-        local_file_path = os.path.join(docs_dir, template_path)
-
-        # Debug information
-        st.sidebar.subheader("Debug Information")
-        st.sidebar.text(f"Current directory: {current_dir}")
-        st.sidebar.text(f"Docs directory: {docs_dir}")
-        st.sidebar.text(f"Template path: {template_path}")
-        st.sidebar.text(f"Local file path: {local_file_path}")
+        local_file_path = os.path.join(docs_dir, template_filename)
 
         if not os.path.exists(local_file_path):
             st.error(f"Template file not found: {local_file_path}")
