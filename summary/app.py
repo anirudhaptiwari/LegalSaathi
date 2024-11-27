@@ -14,15 +14,15 @@ def main():
     load_dotenv()
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        st.error("GROQ API key not found. Please check your .env file.")
+        st.error("Please check your .env file.")
         return
 
     st.title("Multilingual Document Summary")
 
     llm = LLMIntegration()
 
-    input_language = st.selectbox("Select input document language", ["English", "Hindi", "Marathi"])
-    output_language = st.selectbox("Select output summary language", ["English", "Hindi", "Marathi"])
+    input_language = st.selectbox("Select input document language", ["English", "Hindi Devanagari", "Marathi"])
+    output_language = st.selectbox("Select output summary language", ["English", "Hindi Devanagari", "Marathi"])
 
     uploaded_files = st.file_uploader("Choose PDF, DOCX, or image files", type=["pdf", "docx", "png", "jpg", "jpeg", "tiff", "bmp"], accept_multiple_files=True)
 
